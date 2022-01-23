@@ -7,7 +7,7 @@
   >
     <el-form ref="form" :model="sizeForm" label-width="80px" size="mini">
       <el-form-item label="名称">
-        <el-input v-model="sizeForm.name" clearable='true'></el-input>
+        <el-input v-model="sizeForm.name" :clearable='true'></el-input>
       </el-form-item>
       <el-form-item label="性">
         <el-checkbox-group v-model="sizeForm.properties" max='1'>
@@ -47,10 +47,10 @@
         ></el-cascader>
       </el-form-item>
       <el-form-item label="详细描述">
-        <el-input type="textarea" v-model="sizeForm.description" clearable='true'></el-input>
+        <el-input type="textarea" v-model="sizeForm.description" :clearable='true'></el-input>
       </el-form-item>
       <el-form-item label="图片链接">
-        <el-input v-model="sizeForm.picturelink" clearable='true'></el-input>
+        <el-input v-model="sizeForm.picturelink" :clearable='true'></el-input>
       </el-form-item>
     </el-form>
     <div

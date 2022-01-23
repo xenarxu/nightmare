@@ -6,15 +6,15 @@
   >
     <el-form ref="form" :model="sizeForm" label-width="80px" size="mini">
       <el-form-item label="名称">
-        <el-input v-model="sizeForm.name" clearable></el-input>
+        <el-input v-model="sizeForm.name" :clearable="true"></el-input>
       </el-form-item>
       <el-dialog title="添加药材" :visible.sync="inputVisible1" append-to-body>
         <el-form :model="form">
           <el-form-item label="药材名称" :label-width="formLabelWidth">
-            <el-input v-model="form.name" autocomplete="off"></el-input>
+            <el-input v-model="form.name" autocomplete="off" :clearable="true"></el-input>
           </el-form-item>
           <el-form-item label="重量" :label-width="formLabelWidth">
-            <el-input v-model="form.weight" autocomplete="off" clearable></el-input>
+            <el-input v-model="form.weight" autocomplete="off" :clearable="true"></el-input>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">

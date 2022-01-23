@@ -36,7 +36,7 @@
             </el-table-column>
             <el-table-column align="right">
               <template slot="header" slot-scope="scope">
-                <el-input v-model="search" size="mini" placeholder="输入关键字搜索" clearable/>
+                <el-input v-model="search" size="mini" placeholder="输入关键字搜索" :clearable="true"/>
                 </template>
             <template slot-scope="scope">
   <el-button

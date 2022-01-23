@@ -1,17 +1,27 @@
 <template>
   <el-row>
     <el-col :span="6">
-      <el-card>
+      <el-card style="height: 40vh">
         <el-descriptions direction="vertical" border class="header">
-          <el-descriptions-item :span="4" label="名称"> </el-descriptions-item>
+          <el-descriptions-item :span="4" label="名称">
+            {{ prescription.name }}</el-descriptions-item
+          >
           <el-descriptions-item :span="4" label="配方">
-            <el-tag size="small"> </el-tag>
-          </el-descriptions-item> </el-descriptions
-      ></el-card>
-      <el-card style="margin-top: 2vh; height: 58vh">
-        <el-input placeholder="请输入内容" v-model="search" clearable= 'true'>
+            <el-tag
+              v-for="item in prescription.newHerb"
+              :key="item"
+              size="small"
+            >
+              {{ item }}</el-tag
+            >
+          </el-descriptions-item>
+        </el-descriptions></el-card
+      >
+      <el-card style="margin-top: 2vh; height: 40vh">
+        <el-input placeholder="请输入内容" v-model="search" :clearable="true">
         </el-input>
         <el-table
+          height="40vh"
           :data="
             tableData.filter(
               (data) =>
@@ -20,9 +30,15 @@
             )
           "
           style="width: 100%"
+          @row-click="showInfo"
         >
-          <el-table-column label="Date" prop="date"> </el-table-column>
-          <el-table-column label="Name" prop="name"> </el-table-column>
+          <el-table-column label="名称" prop="name"> </el-table-column>
+          <el-table-column
+            label="成分"
+            prop="newHerbShow"
+            show-overflow-tooltip
+          >
+          </el-table-column>
         </el-table>
       </el-card>
     </el-col>
@@ -31,11 +47,11 @@
         <el-col :span="23" :offset="1">
           <el-card>
             <el-collapse v-model="activeName" accordion>
-              <el-collapse-item title="药材归经桑葚图 Meridian" name="1">
+              <el-collapse-item title="方剂成分归经桑葚图 Meridian" name="1">
                 <el-card class="box-card">
                   <div
-                    ref="myNodeChart"
-                    :style="{ height: '50vh', width: '90vw' }"
+                    ref="sanKeyChart"
+                    :style="{ height: '50vh', width: '60vw' }"
                   ></div>
                 </el-card>
               </el-collapse-item>
@@ -72,43 +88,114 @@
 </template>
 
 <script>
+import axios from "axios";
+import * as echarts from "echarts";
 export default {
   data() {
     return {
-      tableData: [
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1517 弄",
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1519 弄",
-        },
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1516 弄",
-        },
-      ],
+      prescription: { name: "", newHerb: [] },
+      tableData: [],
       search: "",
-
+      chooseId: 1,
       activeName: "1",
+      sanKeyChart : null
     };
   },
   methods: {
-    handleEdit(index, row) {
-      console.log(index, row);
+    async showChart() {
+      let sanKeyData = [];
+      let sanKeyLinks = [];
+      await axios({
+        method: "POST",
+        url: "http://localhost:3000/analysis/getSankeyData",
+        data: {
+          id: this.chooseId,
+        },
+      }).then((res) => {
+        const { data } = res.data;
+        sanKeyData = data.data;
+        sanKeyLinks = data.links;
+        console.log(data);
+      });
+      var option = {};
+     
+      if (this.sanKeyChart == null) {
+       this.sanKeyChart = echarts.init(this.$refs.sanKeyChart);
+      }
+      option = {
+        tooltip: {
+          trigger: "item",
+          triggerOn: "mousemove",
+        },
+        series: {
+          type: "sankey",
+          layout: "none",
+          emphasis: {
+            focus: "adjacency",
+          },
+          lineStyle: {
+            color: "gradient",
+            curveness: 0.5,
+          },
+          data: sanKeyData,
+          links: sanKeyLinks,
+        },
+      };
+      option && this.sanKeyChart.setOption(option);
     },
-    handleDelete(index, row) {
-      console.log(index, row);
+    showInfo(row, column) {
+      this.chooseId = row.id;
     },
+    async getP() {
+      let prescriptions = [];
+      await axios({
+        method: "GET",
+        url: "http://localhost:3000/prescription/getPrescriptions",
+      })
+        .then((res) => {
+          const { data } = res.data;
+          prescriptions = data;
+        })
+        .catch((e) => {
+          console.log(e);
+        });
+      if (prescriptions.length > 0) {
+        for (let index = 0; index < prescriptions.length; index++) {
+          prescriptions[index].newHerb = [];
+          for (
+            let index1 = 0;
+            index1 < prescriptions[index].herbs.length;
+            index1++
+          ) {
+            prescriptions[index].newHerb.push(
+              //讲对象转为字符串数组供tag展示
+              prescriptions[index].herbs[index1].name +
+                "(" +
+                prescriptions[index].herbs[index1].weight +
+                "克)"
+            );
+          }
+          prescriptions[index].newHerbShow =
+            prescriptions[index].newHerb.join(","); //表格展示
+        }
+        this.tableData = prescriptions;
+      } else this.tableData = [];
+    },
+  },
+  watch: {
+    tableData(value) {
+      this.prescription = value[0];
+      this.chooseId = value[0].id;
+    },
+    chooseId(value) {
+      this.prescription = this.tableData.find((p) => {
+        return p.id === value;
+      });
+      this.showChart();
+    },
+  },
+  mounted() {
+    this.getP();
   },
 };
 </script>
